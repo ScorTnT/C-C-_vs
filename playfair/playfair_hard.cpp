@@ -1,7 +1,6 @@
 //#include <iostream>
 //#include <fstream>
 //#include <string>
-//#include <vector>
 //using namespace std;
 //
 //#define key "assasinator"
@@ -161,7 +160,7 @@
 //		//cout << endl;
 //		if (pairF == 1) for (int k = 0; k < 25; k++) if (mTable[k] == mPair[2]) mTable[k] = mPair[0];
 //	}
-//	cout << "string cut with '.' = " << after << endl;
+//	cout << "after = " << after << endl;
 //	return after;
 //}
 //string gets_f() {
@@ -196,10 +195,12 @@
 //	
 //	while (encrypt!=buffer) {
 //		encrypt = buffer.substr(0, buffer.find("."));
+//		if (buffer.find(".")==-1)break;
 //		buffer = buffer.substr(buffer.find(".") + 1);
+//		cout << "before :" << encrypt << endl;
 //		//cout << "en : " << encrypt << endl << "bu : "<< buffer << endl;
 //		endSen += pfair.makeEncryption(encrypt);	//what if, in hard mode put string that ends <.>
+//		endSen += ".";
 //	};
 //	cout << endSen << endl;
-//
 //}
