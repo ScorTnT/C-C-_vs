@@ -182,11 +182,25 @@ int insSel(int passflag) {
     for (int k = 0; k < regCnt; k++) {  //register distinguish
         //printf("|%s %s %s|\n", sen.data[0], sen.data[1], reg[k].name );
         if (stricmp(sen.data[0], reg[k].name) == 0) {
-            strcpy(dest, "r"); strcpy(dataType, reg[k].dType);
+            if (stricmp(reg[k].name, "AL") == 0 || stricmp(reg[k].name, "AX") == 0) {
+                strcpy(dest, "a");
+                strcpy(dataType, reg[k].dType);
+            }
+            else {
+                strcpy(dest, "r"); 
+                strcpy(dataType, reg[k].dType);
+            }
             //printf("%s %s %s\n", reg[k].name, sen.data[0], reg[k].dType); 
         }
         if (stricmp(sen.data[1], reg[k].name) == 0) {
-            strcpy(sour, "r"); strcpy(dataType, reg[k].dType);
+            if (stricmp(reg[k].name, "AL") == 0 || stricmp(reg[k].name, "AX") == 0) {
+                strcpy(sour, "a");
+                strcpy(dataType, reg[k].dType);
+            }
+            else {
+                strcpy(sour, "r"); 
+                strcpy(dataType, reg[k].dType);
+            }
             //printf("%s %s %s\n", reg[k].name, sen.data[1], reg[k].dType); 
         }
     }
@@ -336,14 +350,14 @@ int passii() {
             printf("%s ",sen.label);
             if(stricmp(ins[select].xCode,"00")==0){}
             else printf("%s ", ins[select].xCode);
-            btox(binary_buffer);
+
+            if(stricmp(binary_buffer,"00000000")!=0) btox(binary_buffer);
             int n = 0, xFlag = 0;;
             char xbuffer[5];
             for (int k = 0; k < 5; k++) if (stricmp(sen.data[k], "") != 0) {
                 if (isdigit(sen.data[k][0]) != 0) { // 숫자인 경우
-                    //printf("%s ", sen.data[k]);
-                    
-                    for (n = 0; n < 5; n++) if (sen.data[k][n] == 'h' || sen.data[k][n] == 'H') { xFlag = 1; sen.data[k][n] = '\0'; break; }
+                    //printf("%s |%s| ", sen.data[k], ins[select].dType);
+                    for (n = 0; n < strlen(sen.data[k]); n++) if (sen.data[k][n] == 'h' || sen.data[k][n] == 'H') { xFlag = 1; sen.data[k][n] = '\0'; break; }
                     if (xFlag == 1) {
                         if (stricmp(ins[select].dType, "w") == 0) 
                             switch (strlen(sen.data[k]))
