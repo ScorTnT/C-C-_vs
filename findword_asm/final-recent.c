@@ -29,7 +29,7 @@ struct instruction {
     char insLen[2];
     char xCode[3];
     char bCode[9];
-    char etc[5];
+    //char etc[5];
 } ins[ins_MAX];
 int insCnt = 0;
 
@@ -190,25 +190,34 @@ int insSel(int passflag) {
             //printf("%s %s %s\n", reg[k].name, sen.data[1], reg[k].dType); 
         }
     }
+    if (passflag == 1 && (strcmp(dest, "") == 0 || strcmp(sour, "") == 0)) { //symbol distinguish pass1
+        strcpy(dataType, "w");
+        if (strcmp(dest, "") == 0) {
+            strcpy(dest, "m");
+        }
+        if (strcmp(sour, "") == 0) {
+            strcpy(sour, "m");
+        }
+    }
     if (passflag == 2) { //symbol distinguish pass2
         for (int k = 0; k < symCnt; k++) {  
             if (stricmp(sen.data[0], sym[k].name) == 0) {
-                strcpy(dest, "m"); strcpy(dataType, sym[k].dType);
+                strcpy(dest, "m"); 
+                strcpy(dataType, sym[k].dType);
             }
             if (stricmp(sen.data[1], sym[k].name) == 0) {
-                strcpy(sour, "m"); strcpy(dataType, sym[k].dType);
+                strcpy(sour, "m"); 
+                strcpy(dataType, sym[k].dType);
             }
         }
     }
-    if (passflag == 1 && (strcmp(dest, "") == 0 || strcmp(sour, "") == 0)) { //symbol distinguish pass1
-        if (strcmp(dest, "") == 0) strcpy(dest, "m");
-        if (strcmp(sour, "") == 0) strcpy(sour, "m");
-    }
     if( wflag == 1 ){
+        //printf("dest %s, sour %s dataType %s\n", dest, sour, dataType);
+        //printf("sentence %s %s\n", sen.label, sen.instruction);
         for (select = 0; select < insCnt + 1; select++) {
-        if (select == insCnt) { return -1; }
-        if (stricmp(sen.instruction, ins[select].name) == 0 && stricmp(ins[select].dest,dest) == 0 &&
-            stricmp(ins[select].sour,sour) == 0 && stricmp(ins[select].dType,dataType) == 0) break;
+            if (stricmp(sen.instruction, ins[select].name) == 0 && stricmp(ins[select].dest,dest) == 0 &&
+                stricmp(ins[select].sour,sour) == 0 && stricmp(ins[select].dType,dataType) == 0) break;
+            if (select == insCnt) { return -1; }
         }
     }
     return select;
@@ -229,7 +238,7 @@ int passi() {
         if (stricmp(sen.instruction, "dw") == 0 || stricmp(sen.instruction, "db") == 0) mflag = 1;
         if (wordCnt == -1) continue;
         if (mflag != 1) select = insSel(1);
-        if (select == -1) { printf("error: instruction not exist."); return 0; }
+        if (select == -1) { printf("error: instruction not exist.\n\n"); continue; }
         cutp = strtok(NULL, ",\t ");
         if (mflag == 1) {
             sym[symCnt].LCsave = LC;
@@ -265,9 +274,20 @@ int passi() {
     fclose(fpR);
     return 0;
 }
+void btox(char* byte_bit[]) {
+    int acc = 0, l = 0;
+    char buffer[9];
+    strcpy(buffer, byte_bit);
+    //printf("%s ", buffer);
+    for (int k = 7; 0 <= k; k--) {
+        if (buffer[k] == '1') acc += 1 << l;
+        l++;
+    }
+    printf("%02X ", acc);
+}
 int passii() {
-    char buffer[51];
-    int select = 0;
+    char buffer[51], binary_buffer[9], destB[4] = "???", sourB[4]="???";
+    int select = 0, zero = 0;;
     printf("start pass2\n");
     FILE* fpR = fopen(cp_ASMfile, "r");
     if (fpR == NULL) {
@@ -279,16 +299,98 @@ int passii() {
         int wordCnt = sentenceProcess(buffer);
         if (wordCnt == -1) continue;
         if (stricmp(sen.instruction, "dw") == 0 || stricmp(sen.instruction, "db") == 0) continue;
-        
+
         select = insSel(2);
         cutp = strtok(NULL, ",\t ");
         if (wflag == 1) {
-            printf("%s ", ins[select].xCode);
+            if (stricmp(ins[select].sour, "r") == 0) {
+                for (int k = 0; k < regCnt; k++)
+                    if (stricmp(sen.data[1], reg[k].name) == 0) strcpy(sourB,reg[k].bCode);
+                strcpy(sen.data[1], "");
+            }
+            if(stricmp(ins[select].dest,"r") == 0) {
+                for (int k = 0; k < regCnt; k++) 
+                    if (stricmp(sen.data[0], reg[k].name) == 0) strcpy(destB, reg[k].bCode);
+                strcpy(sen.data[0], "");
+            }
+            strcpy(binary_buffer, ins[select].bCode);
+            //printf("%s ", ins[select].xCode);
             int count = 1;
             count = atoi(ins[select].insLen);
-            for (int k = 0; k < count; k++) printf("%d ", k);
+            //for (int k = 0; k < count; k++) printf("%d ", k);
+            //printf("ins len : %d\n", count);
+            for (int k = 0; k < 8; k++) if (binary_buffer[k] == '?') {
+                for (int i = k; i < k + 3; i++) {
+                    binary_buffer[i] = destB[zero++];
+                }
+                zero = 0;
+                break;
+            }
+            for (int k = 0; k < 8; k++) if (binary_buffer[k] == '?') {
+                for (int i = k; i < k + 3; i++) {
+                    binary_buffer[i] = sourB[zero++];
+                }
+                zero = 0;
+                break;
+            }
+            printf("%s ",sen.label);
+            if(stricmp(ins[select].xCode,"00")==0){}
+            else printf("%s ", ins[select].xCode);
+            btox(binary_buffer);
+            int n = 0, xFlag = 0;;
+            char xbuffer[5];
+            for (int k = 0; k < 5; k++) if (stricmp(sen.data[k], "") != 0) {
+                if (isdigit(sen.data[k][0]) != 0) { // 숫자인 경우
+                    //printf("%s ", sen.data[k]);
+                    
+                    for (n = 0; n < 5; n++) if (sen.data[k][n] == 'h' || sen.data[k][n] == 'H') { xFlag = 1; sen.data[k][n] = '\0'; break; }
+                    if (xFlag == 1) {
+                        if (stricmp(ins[select].dType, "w") == 0) 
+                            switch (strlen(sen.data[k]))
+                            {
+                            case 1:
+                                printf("0%c 00", sen.data[k][0]);
+                                break;
+                            case 2:
+                                printf("%c%c 00", sen.data[k][0], sen.data[k][1]);
+                                break;
+                            case 3:
+                                printf("%c%c 0%c", sen.data[k][1], sen.data[k][2], sen.data[k][0]);
+                                break;
+                            default:
+                                printf("%c%c %c%c", sen.data[k][2], sen.data[k][3], sen.data[k][0], sen.data[k][1]);
+                                break;
+                            }
+                        else
+                            switch (strlen(sen.data[k])) 
+                            {
+                            case 1:
+                                printf("0%c ", sen.data[k][0]);
+                                break;
+                            default:
+                                printf("%c%c ", sen.data[k][0], sen.data[k][1]);
+                                break;
+                            }
+                    }
+                    else {
+                        if (stricmp(ins[select].dType, "w") == 0) {
+                            sprintf(xbuffer, "%04X", atoi(sen.data[k]));
+                            printf("%c%c %c%c ", xbuffer[2], xbuffer[3], xbuffer[0], xbuffer[1]);
+                        }
+                        else 
+                            printf("%02X ", atoi(sen.data[k]));
+                    }
+                }
+                else {  //symbol인 경우
+                    //printf("%s ", sen.data[k]);
+                    for (int t = 0; t < symCnt; t++) if (stricmp(sen.data[k], sym[t].name) == 0) {
+                        sprintf(xbuffer,"%04X", sym[t].LCsave);
+                        printf("%c%c %c%c ", xbuffer[2], xbuffer[3], xbuffer[0], xbuffer[1]);
+                    }
+                }
+            }
         }
-        printf("\n");
+        printf("\n\n");
     }
     fclose(fpR);
     return 0;
@@ -297,6 +399,7 @@ int main(void) {
     macroProcess();
     init();
     passi();
+    for (int k = 0; k < symCnt; k++) printf("symbol :%s, Type :%s\n", sym[k].name, sym[k].dType);
     passii();
     return 0;
 }
