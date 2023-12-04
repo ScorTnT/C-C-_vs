@@ -1,0 +1,16 @@
+mov   b r r 2 8A 11??????
+mov   w r r 2 8B 11??????
+mov   b r m 2 8A 00???110
+mov   w r m 2 8B 00???110
+mov   b m r 3 88 00???110
+mov   w m r 4 89 00???110
+mov   b r i 2 00 10110???
+mov   w r i 3 00 10111???
+mov   b m i 5 C6 00000110
+mov   w m i 6 C7 00000110
+mov   b m a 2 B2 00000000
+mov   w m a 3 B3 00000000
+mov   b a m 3 A0 00000000
+mov   w a m 3 A1 00000000
+mov   b a i 2 B0 00000000
+mov   w a i 3 B8 00000000
