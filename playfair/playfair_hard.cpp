@@ -3,8 +3,8 @@
 #include <string>
 using namespace std;
 
-#define key "assasinator"
-#define pair "m/a"
+#define key "speaker"
+#define pair "k/a"
 #define txtfile "test.txt"
 
 class Playfair {
@@ -47,7 +47,7 @@ void Playfair::makeTable() {
 
 void Playfair::showTable() {
 	// mTable에 있는 값들을 5 X 5 로 화면에 출력하시오.
-	cout << "- - table" << endl;
+	cout << "- - - - - - - table - - - - - - -" << endl;
 	for (int l = 0; l < 5; l++) {
 		for (int k = 0; k < 5; k++) {
 			cout << mTable[l * 5 + k];
@@ -56,7 +56,7 @@ void Playfair::showTable() {
 		}
 		cout << endl;
 	}
-	cout << "- - - - -" << endl;
+	cout << "- - - - - - - - - - - - - - - - -" << endl << endl;
 }
 
 string Playfair::makeEncryption(string mEncryption) {
@@ -203,8 +203,11 @@ int main() {
 	cout << "before : " << buffer << endl;
 	while (encrypt!=buffer) {
 		encrypt = buffer.substr(0, buffer.find("."));
-		if (buffer.find(".")==-1)break;
-		buffer = buffer.substr(buffer.find(".") + 1);
+		if (buffer.find(".") == -1) {
+			if(encrypt[0]=='\0')
+				break;
+		}
+		else buffer = buffer.substr(buffer.find(".") + 1);
 		//cout << "before :" << encrypt << endl;
 		//cout << "en : " << encrypt << endl << "bu : "<< buffer << endl;
 		endSen += pfair.makeEncryption(encrypt);	//what if, in hard mode put string that ends <.>
