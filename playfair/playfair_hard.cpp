@@ -28,10 +28,6 @@ Playfair::Playfair(string mKey, string mPair) {
 	}
 	this->mPair = mPair;
 }
-bool equalCheck(int a, int b) {
-	bool result = (a == b);
-	return result;
-}
 void Playfair::makeTable() {
 	// mKey와 mPair를 이용하여 mTable을 만드세요. (5 X 5 로 표현하시오)
 	string alpha = "abcdefghijklmnopqrstuvwxyz";
@@ -98,7 +94,7 @@ string Playfair::makeEncryption(string mEncryption) {
 	if (mEncryption.length() % 2 == 1) mEncryption.append("x");
 
 	//middle checking mEncryption string.
-	//cout << mEncryption << endl;
+	cout << "put x : " << mEncryption << endl;
 
 	//start encryption
 	l = mEncryption.length();
@@ -174,44 +170,56 @@ string Playfair::makeEncryption(string mEncryption) {
 string gets_f() {
 	ifstream fin;
 	fin.open(txtfile);
+	// txtfile을 연다.
 	if (!fin) {
 		cout << "error" << endl;
 		return 0;
 	}
 	string result;
-
 	fin.seekg(0, ios::end);
-	// 그리고 그 위치를 읽는다. (파일의 크기)
+	// 그리고 그 위치를 읽는다.
 	int size = fin.tellg();
-	// 그 크기의 문자열을 할당한다.
 	result.resize(size);
-	// 위치 지정자를 다시 파일 맨 앞으로 옮긴다.
+	// 그 크기의 문자열을 할당한다.
+	
 	fin.seekg(0, ios::beg);
-	// 파일 전체 내용을 읽어서 문자열에 저장한다.
+	// 위치 지정자를 다시 파일 맨 앞으로 옮긴다.
+	// 파일 전체 크기 만큼을 읽어서 문자열에 저장한다.
 	fin.read(&result[0], size);	// char 주소의 값을 줘야하는 첫 인자이기에 string의 주소를 전달
 	// 줄넘김 \n 제거
 	result.erase(remove(result.begin(), result.end(), '\n'), result.end());
 	//cout << result << endl;
 	return result;
 } 
-int main() {
-	Playfair pfair(key, pair);
+int playfairF() {
+	string keyin, pairin;
+	cout << "key 입력(종료:0) : ";
+	cin >> keyin;
+	if (strcmp(&keyin[0], "0") == 0) return 0;
+	cout << "pair 입력 ( ex: a/b ) : ";
+	cin >> pairin;
+	Playfair pfair(keyin, pairin);
 	pfair.makeTable();
 	pfair.showTable();
-	string encrypt, buffer,endSen;
+	string encrypt, buffer, endSen;
 	buffer = gets_f();
 	cout << "before : " << buffer << endl;
-	while (encrypt!=buffer) {
+	while (encrypt != buffer) {
 		encrypt = buffer.substr(0, buffer.find("."));
 		if (buffer.find(".") == -1) {
-			if(encrypt[0]=='\0')
+			if (encrypt[0] == '\0')
 				break;
 		}
 		else buffer = buffer.substr(buffer.find(".") + 1);
-		//cout << "before :" << encrypt << endl;
+		cout << "before : " << encrypt << endl;
 		//cout << "en : " << encrypt << endl << "bu : "<< buffer << endl;
 		endSen += pfair.makeEncryption(encrypt);	//what if, in hard mode put string that ends <.>
 		endSen += ".";
 	};
-	cout << endSen << endl;
+	cout << "full encrytion : " << endSen << endl;
+	return 1;
+}
+int main() {
+	while (playfairF()!=0) {
+	}
 }
