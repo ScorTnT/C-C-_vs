@@ -17,7 +17,6 @@ public:
 	void showTable();
 	string makeEncryption(string mEncryption);
 };
-
 Playfair::Playfair(string mKey, string mPair) {
 	this->mKey = mKey;
 	if (mPair[0] > mPair[2]) {	
@@ -59,14 +58,7 @@ string Playfair::makeEncryption(string mEncryption) {
 	int Bflag[2] = { 0 };
 	// 공백 제거
 	mEncryption.erase(remove(mEncryption.begin(), mEncryption.end(), ' '), mEncryption.end());
-	//cout << mEncryption << endl; 
-
-	//if string include <.>, remove <.>
-	if (mEncryption[mEncryption.length() - 1] == '.') mEncryption = mEncryption.substr(0, mEncryption.length() - 1);
-	//be careful for assasinator 같은 문장이 mEncryption 으로 들어옴
 	int l = mEncryption.length();
-	//replace upper-letter to lower-letter.
-	//for (int k = 0; k < l; k++) if ('A' <= mEncryption[k] && mEncryption[k] <= 'Z') mEncryption[k] += 32;
 	//insert x between same letter.
 	for (int k = 0; k < l; k++) {
 		if ((mEncryption[k] == mEncryption[k + 1])) {
@@ -89,10 +81,8 @@ string Playfair::makeEncryption(string mEncryption) {
 			}
 		}
 	}
-
 	//if .length() = odd, append x.
 	if (mEncryption.length() % 2 == 1) mEncryption.append("x");
-
 	//middle checking mEncryption string.
 	cout << "put x : " << mEncryption << endl;
 
@@ -117,16 +107,10 @@ string Playfair::makeEncryption(string mEncryption) {
 			}
 			if (mTable[p] == before[0]) c = p;
 			if (mTable[p] == before[1]) d = p;
-
 			// c,d = index.
 		}
 		b = c / 5; a = c % 5;
 		y = d / 5; x = d % 5;
-		//cout << "before[0] " << b << " " << a << endl;
-		//cout << "before[1] " << y << " " << x << endl;
-
-		//replace letter use index .
-		//if (y == b && x == a); // no exist same letter, it solved by insert x routine.
 
 		//case : pair -> flag 
 		int pairF = 0;
@@ -138,7 +122,6 @@ string Playfair::makeEncryption(string mEncryption) {
 		//case : same line. 
 		if (y == b || x == a) {
 			if (y == b) {
-				//in mTable, two letters exist next to each other.
 				if (x > a) { a++; x = (x + 1) % 5; }
 				else { x++; a = (a + 1) % 5; }
 			}
@@ -156,11 +139,8 @@ string Playfair::makeEncryption(string mEncryption) {
 		before[0] = mTable[b * 5 + a];
 		before[1] = mTable[y * 5 + x];
 		for (int t = 0; t < 2; t++) if (Bflag[t] == 1) before[t] -= 32;
-
-		//cout << "after: " << before << endl;
 		after.append(before);
 		c = 0; d = 0;
-		//cout << endl;
 		if (pairF == 1) for (int k = 0; k < 25; k++) if (mTable[k] == mPair[2]) mTable[k] = mPair[0];
 		for (int t = 0; t < 2; t++) Bflag[t] = 0;
 	}
@@ -177,11 +157,10 @@ string gets_f() {
 	}
 	string result;
 	fin.seekg(0, ios::end);
-	// 그리고 그 위치를 읽는다.
+
 	int size = fin.tellg();
 	result.resize(size);
 	// 그 크기의 문자열을 할당한다.
-	
 	fin.seekg(0, ios::beg);
 	// 위치 지정자를 다시 파일 맨 앞으로 옮긴다.
 	// 파일 전체 크기 만큼을 읽어서 문자열에 저장한다.
@@ -220,6 +199,5 @@ int playfairF() {
 	return 1;
 }
 int main() {
-	while (playfairF()!=0) {
-	}
+	while (playfairF() != 0);
 }
