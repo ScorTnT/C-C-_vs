@@ -8,7 +8,7 @@
 #define cp_ASMfile "prog3.asm"
 
 #define INS_txt "instruction.txt"
-#define ins_MAX 100
+#define ins_MAX 200
 #define REG_txt "register.txt"
 #define reg_MAX 16
 #define MACROCNT 5
@@ -180,6 +180,26 @@ void macroProcess() {
     fclose(fpB);
     for (int k = 0; k < macCnt; k++)printf("%s\n", MACList[k]);
 }
+int sympass() {
+    char buffer[51];
+    FILE* fpR = fopen(cp_ASMfile, "r"); 
+    while (!feof(fpR)) {
+        fgets(buffer, 51, fpR);
+        int wordCnt = sentenceProcess(buffer);
+        if (stricmp(sen.instruction, "dw") == 0 || stricmp(sen.instruction, "db") == 0) {
+            strcpy(sym[symCnt].name, sen.label);
+            if (stricmp(sen.instruction, "dw") == 0) {
+                strcpy(sym[symCnt].dType, "w");
+            }
+            else if (stricmp(sen.instruction, "db") == 0) {
+                strcpy(sym[symCnt].dType, "b");
+            }
+            symCnt++;
+        }
+    }
+    for (int k = 0; k < symCnt; k++) printf("%s %s\n", sym[k].name, sym[k].dType);
+    return 0;
+}
 int insSel(int passflag) {
     int select = 0;
     char dest[2] = { '\0' }, sour[2] = { '\0' }, dataType[2] = { '\0' }, instruction[6] = { '\0' };
@@ -215,12 +235,27 @@ int insSel(int passflag) {
         }
     }
     if (passflag == 1 && (strcmp(dest, "") == 0 || strcmp(sour, "") == 0)) { //symbol distinguish pass1
-        strcpy(dataType, "w");
+        //for (int k = 0; k < symCnt; k++)if (stricmp(sen.data[0], sym[k].name) == 0 || stricmp(sen.data[1], sym[k].name) == 0) strcpy(dataType, sym[k].dType);
+        /*strcpy(dataType, "w");
         if (strcmp(dest, "") == 0) {
             strcpy(dest, "m");
         }
         if (strcmp(sour, "") == 0) {
             strcpy(sour, "m");
+        }*/
+        for (int k = 0; k < symCnt; k++) {
+            if (stricmp(sen.data[0], sym[k].name) == 0) {
+                strcpy(dest, "m");
+                strcpy(dataType, sym[k].dType);
+            }
+            if (stricmp(sen.data[1], sym[k].name) == 0) {
+                strcpy(sour, "m");
+                strcpy(dataType, sym[k].dType);
+            }
+        }
+        //ex INC AL -> sour == NULL -> s(single)
+        if (strcmp(dest, "") == 0) {
+            strcpy(dest, "s");
         }
     }
     if (passflag == 2) { //symbol distinguish pass2
@@ -236,8 +271,8 @@ int insSel(int passflag) {
         }
     }
     if( wflag == 1 ){
-        printf("dest %s, sour %s dataType %s\n", dest, sour, dataType);
-        printf("sentence 1%s 2%s\n", sen.label, sen.instruction);
+        //printf("dest %s, sour %s dataType %s\n", dest, sour, dataType);
+        //printf("sentence 1%s 2%s\n", sen.label, sen.instruction);
         if (sen.data[1][0] == '\0') {
             //printf("sour null\n");
             for (select = 0; select < insCnt + 1; select++) {
@@ -263,7 +298,7 @@ int insSel(int passflag) {
 }
 int passi() {
     char buffer[51];
-    int LC = 0, select = 0;
+    int LC = 0, select = 0, symsub=0;
     printf("start pass1\n");
     FILE* fpR = fopen(cp_ASMfile, "r");
     if (fpR == NULL) {
@@ -287,27 +322,27 @@ int passi() {
         if (select == -1) { printf("error: instruction not exist.\n\n"); continue; }
         cutp = strtok(NULL, ",\t ");
         if (mflag == 1) {
-            sym[symCnt].LCsave = LC;
-            strcpy(sym[symCnt].name, sen.label);
+            sym[symsub].LCsave = LC;
             if (stricmp(sen.instruction, "dw") == 0) {
-                strcpy(sym[symCnt].dType, "w");
+                strcpy(sym[symsub].dType, "w");
                 LCType = 2;
             }
             else if(stricmp(sen.instruction, "db") == 0){
-                strcpy(sym[symCnt].dType, "b");
+                strcpy(sym[symsub].dType, "b");
                 LCType = 1;
             }
             //printf("\ndata type :%s, LC save :%.4x\n", sym[symCnt].dType, sym[symCnt].LCsave);
-            for (int k = 0; k < wordCnt; k++) strcpy(sym[symCnt].data[k], sen.data[k]);
-            symCnt++;
+            for (int k = 0; k < wordCnt; k++) strcpy(sym[symsub].data[k], sen.data[k]);
+            symsub++;
         }
         if (wflag == 1) {
             printf("LC:|%.4x|  %s %s ", LC,sen.label,sen.instruction);
             for (int k = 0; k < wordCnt; k++) printf("%s ", sen.data[k]);
             printf("\n");
             if (mflag != 1) {
-                printf("%s %s %s %s to %s\n", ins[select].name, ins[select].dType, ins[select].xCode, ins[select].sour, ins[select].dest);
+                //printf("%s %s %s %s to %s\n", ins[select].name, ins[select].dType, ins[select].xCode, ins[select].sour, ins[select].dest);
                 LC += atoi(ins[select].insLen);
+                printf("%s\n", ins[select].insLen);
             }
             if (mflag == 1)
             {
@@ -448,8 +483,9 @@ int passii() {
 int main(void) {
     macroProcess();
     init();
+    sympass();
     passi();
-    for (int k = 0; k < symCnt; k++) printf("symbol :%s, Type :%s\n", sym[k].name, sym[k].dType);
+    for (int k = 0; k < symCnt; k++) printf("symbol :%s, Type :%s, LC : %.4x\n", sym[k].name, sym[k].dType, sym[k].LCsave);
     passii();
     return 0;
 }
