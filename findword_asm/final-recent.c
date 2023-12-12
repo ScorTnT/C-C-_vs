@@ -4,11 +4,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define ASMfile "prog.asm"
+#define ASMfile "prog4.asm"
 #define cp_ASMfile "prog3.asm"
 
 #define INS_txt "instruction.txt"
-#define ins_MAX 30
+#define ins_MAX 100
 #define REG_txt "register.txt"
 #define reg_MAX 16
 #define MACROCNT 5
@@ -40,6 +40,12 @@ struct symbol {
     int LCsave;
 } sym[5];
 int symCnt = 0;
+
+struct label {
+    char name[10];
+    int LCsave;
+} lab[5];
+int labelCnt = 0;
 
 struct sentence {
     char label[10];
@@ -94,7 +100,7 @@ int sentenceProcess(char buffer[]) {
     strcpy(line, buffer);
     if(line[strlen(line) - 1] =='\n') line[strlen(line) - 1] = '\0'; //문장 끝 \n 제거
 
-    cutp = strtok(line, "\t :");
+    cutp = strtok(line, "\t ");
     
     if (line[0] == '\t') {         //label이 존재하지 않을 경우
     }
@@ -179,6 +185,10 @@ int insSel(int passflag) {
     char dest[2] = { '\0' }, sour[2] = { '\0' }, dataType[2] = { '\0' }, instruction[6] = { '\0' };
     if (isdigit(sen.data[0][0]) != 0) strcpy(dest, "i");
     if (isdigit(sen.data[1][0]) != 0) strcpy(sour, "i");
+    for (int k = 0; k < labelCnt; k++) {
+        if(stricmp(lab[k].name,sen.data[0])==0) strcpy(dest, "L");
+        if(stricmp(lab[k].name,sen.data[1])==0) strcpy(sour, "L");
+    }
     for (int k = 0; k < regCnt; k++) {  //register distinguish
         //printf("|%s %s %s|\n", sen.data[0], sen.data[1], reg[k].name );
         if (stricmp(sen.data[0], reg[k].name) == 0) {
@@ -226,12 +236,27 @@ int insSel(int passflag) {
         }
     }
     if( wflag == 1 ){
-        //printf("dest %s, sour %s dataType %s\n", dest, sour, dataType);
-        //printf("sentence %s %s\n", sen.label, sen.instruction);
-        for (select = 0; select < insCnt + 1; select++) {
-            if (stricmp(sen.instruction, ins[select].name) == 0 && stricmp(ins[select].dest,dest) == 0 &&
-                stricmp(ins[select].sour,sour) == 0 && stricmp(ins[select].dType,dataType) == 0) break;
-            if (select == insCnt) { return -1; }
+        printf("dest %s, sour %s dataType %s\n", dest, sour, dataType);
+        printf("sentence 1%s 2%s\n", sen.label, sen.instruction);
+        if (sen.data[1][0] == '\0') {
+            //printf("sour null\n");
+            for (select = 0; select < insCnt + 1; select++) {
+                if(stricmp(sen.instruction,"jmp")==0|| stricmp(sen.instruction, "je") == 0 || stricmp(sen.instruction, "ja") == 0
+                    || stricmp(sen.instruction, "jb") == 0 || stricmp(sen.instruction,"int")==0)
+                    if (stricmp(sen.instruction, ins[select].name) == 0 && stricmp(ins[select].dest, dest) == 0 ) {
+                    break;
+                }
+                if (stricmp(sen.instruction, ins[select].name) == 0 && stricmp(ins[select].dest, dest) == 0 &&
+                    stricmp(ins[select].dType, dataType) == 0) { break; }
+                if (select == insCnt) { return -1; }
+            }
+        }
+        else {
+            for (select = 0; select < insCnt + 1; select++) {
+                if (stricmp(sen.instruction, ins[select].name) == 0 && stricmp(ins[select].dest, dest) == 0 &&
+                    stricmp(ins[select].sour, sour) == 0 && stricmp(ins[select].dType, dataType) == 0) break;
+                if (select == insCnt) { return -1; }
+            }
         }
     }
     return select;
@@ -248,7 +273,14 @@ int passi() {
     while (!feof(fpR)) {
         fgets(buffer, 51, fpR);
         int wordCnt = sentenceProcess(buffer), LCType = 1;
+        //printf("inctruction : %s\ndest : %s\n",sen.instruction,sen.data[0]);
         int mflag = 0;
+        if (sen.label[strlen(sen.label) - 1] == ':') {
+            sen.label[strlen(sen.label) - 1] = '\0';
+            strcpy(lab[labelCnt].name, sen.label);
+            lab[labelCnt].LCsave = LC;
+            labelCnt++;
+        }
         if (stricmp(sen.instruction, "dw") == 0 || stricmp(sen.instruction, "db") == 0) mflag = 1;
         if (wordCnt == -1) continue;
         if (mflag != 1) select = insSel(1);
@@ -347,7 +379,7 @@ int passii() {
                 zero = 0;
                 break;
             }
-            printf("%s ",sen.label);
+            //printf("%s ",sen.label);
             if(stricmp(ins[select].xCode,"00")==0){}
             else printf("%s ", ins[select].xCode);
 
@@ -395,8 +427,12 @@ int passii() {
                             printf("%02X ", atoi(sen.data[k]));
                     }
                 }
-                else {  //symbol인 경우
+                else {  //symbol, label인 경우
                     //printf("%s ", sen.data[k]);
+                    for (int t = 0; t < labelCnt; t++) if (stricmp(sen.data[k], lab[t].name) == 0) {
+                        sprintf(xbuffer, "%04X", lab[t].LCsave);
+                        printf("%c%c %c%c ", xbuffer[2], xbuffer[3], xbuffer[0], xbuffer[1]);
+                    }
                     for (int t = 0; t < symCnt; t++) if (stricmp(sen.data[k], sym[t].name) == 0) {
                         sprintf(xbuffer,"%04X", sym[t].LCsave);
                         printf("%c%c %c%c ", xbuffer[2], xbuffer[3], xbuffer[0], xbuffer[1]);
