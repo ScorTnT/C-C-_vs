@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS //sdl 검사 off
+//#define _CRT_SECURE_NO_WARNINGS //sdl 검사 off
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -341,7 +341,7 @@ int passi() {
             if (mflag != 1) {
                 //printf("%s %s %s %s to %s\n", ins[select].name, ins[select].dType, ins[select].xCode, ins[select].sour, ins[select].dest);
                 LC += atoi(ins[select].insLen);
-                printf("%s\n", ins[select].insLen);
+                //printf("%s\n", ins[select].insLen);
             }
             if (mflag == 1)
             {
