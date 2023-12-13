@@ -12,7 +12,6 @@
 #define REG_txt "register.txt"
 #define reg_MAX 16
 #define MACROCNT 5
-#define SIZE 30
 
 struct reg {
     char name[3];
@@ -96,7 +95,7 @@ int sentenceProcess(char buffer[]) {
     int tempCnt = 0;
     strcpy(sen.label, "");
     strcpy(sen.instruction, "");
-    for (int k = 0; k < 5; k++)strcpy(sen.data[k], "");
+    for (int k = 0; k < 5; k++) strcpy(sen.data[k], "\0\0\0\0\0\0\0\0");
     strcpy(line, buffer);
     if(line[strlen(line) - 1] =='\n') line[strlen(line) - 1] = '\0'; //문장 끝 \n 제거
 
@@ -253,9 +252,9 @@ int insSel(int passflag) {
                 strcpy(dataType, sym[k].dType);
             }
         }
-        //ex INC AL -> sour == NULL -> s(single)
-        if (strcmp(dest, "") == 0) {
-            strcpy(dest, "s");
+        //ex INC DL -> sour == NULL -> s(single)
+        if (strcmp(sour, "") == 0) {
+            strcpy(sour, "s");
         }
     }
     if (passflag == 2) { //symbol distinguish pass2
@@ -367,7 +366,7 @@ void btox(char* byte_bit[]) {
     printf("%02X ", acc);
 }
 int passii() {
-    char buffer[51], binary_buffer[9], destB[4] = "???", sourB[4]="???";
+    char buffer[51], binary_buffer[9], destB[4] = "\0\0\0", sourB[4]="\0\0\0";
     int select = 0, zero = 0;;
     printf("start pass2\n");
     FILE* fpR = fopen(cp_ASMfile, "r");
@@ -386,33 +385,49 @@ int passii() {
         if (wflag == 1) {
             if (stricmp(ins[select].sour, "r") == 0) {
                 for (int k = 0; k < regCnt; k++)
-                    if (stricmp(sen.data[1], reg[k].name) == 0) strcpy(sourB,reg[k].bCode);
+                {
+                    if (stricmp(sen.data[1], reg[k].name) == 0) {
+                        strcpy(sourB, reg[k].bCode);
+                    }
+                }
                 strcpy(sen.data[1], "");
             }
             if(stricmp(ins[select].dest,"r") == 0) {
-                for (int k = 0; k < regCnt; k++) 
-                    if (stricmp(sen.data[0], reg[k].name) == 0) strcpy(destB, reg[k].bCode);
+                for (int k = 0; k < regCnt; k++)
+                {
+                    if (stricmp(sen.data[0], reg[k].name) == 0) {
+                        strcpy(destB, reg[k].bCode);
+                    }
+                }
                 strcpy(sen.data[0], "");
             }
             strcpy(binary_buffer, ins[select].bCode);
-            //printf("%s ", ins[select].xCode);
+            //printf("%s ", ins[select].bCode);
             int count = 1;
             count = atoi(ins[select].insLen);
             //for (int k = 0; k < count; k++) printf("%d ", k);
             //printf("ins len : %d\n", count);
-            for (int k = 0; k < 8; k++) if (binary_buffer[k] == '?') {
-                for (int i = k; i < k + 3; i++) {
-                    binary_buffer[i] = destB[zero++];
+            for (int k = 0; k < 8; k++) {
+                if (stricmp(ins[select].dest,"a")==0|| stricmp(ins[select].dest, "m") == 0 
+                    || stricmp(ins[select].dest, "L") == 0 || stricmp(ins[select].dest, "L") == 0) continue;
+                if (destB[0] == "\0") continue;
+                if (binary_buffer[k] == '?') {
+                    for (int i = k; i < k + 3; i++,zero++) {
+                        binary_buffer[i] = destB[zero];
+                    }
+                    zero = 0;
+                    break;
                 }
-                zero = 0;
-                break;
             }
-            for (int k = 0; k < 8; k++) if (binary_buffer[k] == '?') {
-                for (int i = k; i < k + 3; i++) {
-                    binary_buffer[i] = sourB[zero++];
+            for (int k = 0; k < 8; k++) {
+                if (stricmp(ins[select].sour, "a") == 0) continue;
+                if (binary_buffer[k] == '?') {
+                    for (int i = k; i < k + 3; i++,zero++) {
+                        binary_buffer[i] = sourB[zero];
+                    }
+                    zero = 0;
+                    break;
                 }
-                zero = 0;
-                break;
             }
             //printf("%s ",sen.label);
             if(stricmp(ins[select].xCode,"00")==0){}

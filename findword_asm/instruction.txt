@@ -113,8 +113,11 @@ inc   w m s 4 FF 00000110
 jmp   w L s 2 EB 00000000
 jmp   b L s 2 EB 00000000
 ja    w L s 3 77 00000000
+ja    b L s 3 77 00000000
 jb    w L s 3 72 00000000
+jb    b L s 3 72 00000000
 je    w L s 2 74 00000000
+je    b L s 2 74 00000000
 int   b i s 2 CD 00000000
 dec   b a s 2 FE 11001???
 dec   w a s 1 00 01001???
