@@ -1,4 +1,3 @@
-//#define _CRT_SECURE_NO_WARNINGS //sdl °Ë»ç off
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
