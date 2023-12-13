@@ -500,7 +500,7 @@ int main(void) {
     init();
     sympass();
     passi();
-    for (int k = 0; k < symCnt; k++) printf("symbol :%s, Type :%s, LC : %.4x\n", sym[k].name, sym[k].dType, sym[k].LCsave);
+    for (int k = 0; k < symCnt; k++) printf("Symbol :%s, Type :%s, LC : %.4x\n", sym[k].name, sym[k].dType, sym[k].LCsave);
     passii();
     return 0;
 }
